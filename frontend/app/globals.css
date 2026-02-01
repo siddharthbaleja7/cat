@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@import "tailwindcss";
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  --cal-brand: #111111;
+}
+
+body {
+  color: #111;
+  background: #fff;
+  font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Buttons */
+.btn {
+  @apply px-4 py-2.5 rounded-md font-medium transition-colors inline-flex items-center gap-2;
+}
+
+.btn-primary {
+  @apply bg-black text-white hover:bg-gray-900;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-black hover:bg-gray-300;
+}
+
+.btn-outline {
+  @apply border border-gray-300 text-black hover:bg-gray-50;
+}
+
+/* Cards */
+.card {
+  @apply bg-white border border-gray-200 rounded-lg;
+}
+
+/* Forms */
+.form-input,
+.form-select {
+  @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-900 mb-1.5;
+}
