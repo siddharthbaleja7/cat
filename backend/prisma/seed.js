@@ -13,8 +13,7 @@ async function main() {
       email: 'user@example.com',
       username: 'user123',
       name: 'Test User',
-      password: hashedPassword,
-      timezone: 'America/New_York'
+      password: hashedPassword
     }
   })
 
@@ -33,24 +32,22 @@ async function main() {
   })
 
   // Add availability (Mon-Fri, 9AM-5PM)
-  for (let day = 1; day <= 5; day++) {
-    await prisma.availability.upsert({
-      where: {
-        eventTypeId_dayOfWeek: {
-          eventTypeId: eventType1.id,
-          dayOfWeek: day
-        }
-      },
-      update: {},
-      create: {
-        eventTypeId: eventType1.id,
-        dayOfWeek: day,
-        startTime: '09:00',
-        endTime: '17:00',
-        timezone: 'America/New_York'
-      }
-    })
-  }
+  // Add availability (Mon-Fri, 9AM-5PM)
+  // Clear existing first
+  await prisma.availability.deleteMany({
+    where: { eventTypeId: eventType1.id }
+  })
+
+  // Create new
+  await prisma.availability.createMany({
+    data: [1, 2, 3, 4, 5].map(day => ({
+      eventTypeId: eventType1.id,
+      dayOfWeek: day,
+      startTime: '09:00',
+      endTime: '17:00',
+      timezone: 'America/New_York'
+    }))
+  })
 
   console.log('Database seeded!')
 }

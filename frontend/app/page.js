@@ -36,11 +36,9 @@ export default function Home() {
                     </div>
 
                     <div className="flex gap-4 items-center">
-                        <Link href="/login" className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-black">
-                            Log in
-                        </Link>
-                        <Link href="/signup" className="px-5 py-2.5 text-sm font-medium bg-black text-white rounded-full hover:bg-gray-800 transition-all shadow-lg hover:shadow-black/20">
-                            Sign up free
+                        <Link href="/dashboard" className="px-5 py-2.5 text-sm font-medium bg-black text-white rounded-full hover:bg-gray-800 transition-all shadow-lg hover:shadow-black/20 flex items-center gap-2">
+                            Go to app
+                            <span className="text-gray-400">→</span>
                         </Link>
                     </div>
                 </div>
@@ -67,16 +65,11 @@ export default function Home() {
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                         <Link
-                            href="/signup"
-                            className="px-8 py-4 bg-black text-white text-lg font-medium rounded-full hover:bg-gray-900 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1"
+                            href="/dashboard"
+                            className="px-8 py-4 bg-black text-white text-lg font-medium rounded-full hover:bg-gray-900 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 flex items-center gap-2"
                         >
-                            Start for free
-                        </Link>
-                        <Link
-                            href="/booking/30min"
-                            className="px-8 py-4 bg-white text-black text-lg font-medium rounded-full border border-gray-200 hover:bg-gray-50 transition-all hover:border-black"
-                        >
-                            Contact Sales
+                            Go to app
+                            <span className="text-gray-400">→</span>
                         </Link>
                     </div>
                 </div>

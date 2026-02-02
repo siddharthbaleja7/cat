@@ -18,6 +18,7 @@ model User {
 
   eventTypes EventType[]
   bookings      Booking[]
+  schedules     Schedule[]
 }
 
 model EventType {
@@ -35,6 +36,8 @@ model EventType {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
+  scheduleId       String?
+  schedule         Schedule? @relation(fields: [scheduleId], references: [id])
   availability     Availability[]
   dateOverrides    DateOverride[]
   bookings         Booking[]
@@ -42,10 +45,30 @@ model EventType {
   @@unique([userId, slug])
 }
 
+model Schedule {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  isDefault Boolean  @default(false)
+  
+  availability Availability[]
+  eventTypes   EventType[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, name])
+}
+
 model Availability {
   id              String     @id @default(cuid())
-  eventTypeId     String
-  eventType       EventType  @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  
+  eventTypeId     String?
+  eventType       EventType?  @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  
+  scheduleId      String?
+  schedule        Schedule?   @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
   
   dayOfWeek       Int        // 0-6 (Sunday-Saturday)
   startTime       String     // HH:MM
@@ -56,7 +79,8 @@ model Availability {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  @@unique([eventTypeId, dayOfWeek])
+  @@index([eventTypeId])
+  @@index([scheduleId])
 }
 
 model DateOverride {

@@ -1,102 +1,129 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Plus, Clock, MoreHorizontal, Globe, Trash2 } from 'lucide-react'
 import { api } from '@/lib/api'
-
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+import AvailabilityModal from '@/components/AvailabilityModal'
 
 export default function Availability() {
-    const [eventTypes, setEventTypes] = useState([])
-    const [selectedId, setSelectedId] = useState('')
-    const [availability, setAvailability] = useState([])
+    const [schedules, setSchedules] = useState([])
     const [loading, setLoading] = useState(true)
+    const [isModalOpen, setIsModalOpen] = useState(false)
 
     useEffect(() => {
-        async function load() {
-            const res = await api.eventTypes.getAll()
-            setEventTypes(res.data || [])
-            if (res.data?.length > 0) {
-                setSelectedId(res.data[0].id)
-            }
-            setLoading(false)
-        }
-        load()
+        loadSchedules()
     }, [])
 
-    useEffect(() => {
-        if (selectedId) {
-            async function load() {
-                const res = await api.availability.get(selectedId)
-                setAvailability(res.data || [])
-            }
-            load()
+    async function loadSchedules() {
+        try {
+            const res = await api.availability.getAll()
+            setSchedules(res.data || [])
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setLoading(false)
         }
-    }, [selectedId])
-
-    const handleSave = async (dayOfWeek, startTime, endTime) => {
-        await api.availability.create({
-            eventTypeId: selectedId,
-            dayOfWeek,
-            startTime,
-            endTime,
-            timezone: 'America/New_York'
-        })
     }
 
-    if (loading) return <div className="p-8">Loading...</div>
+    const handleCreate = async (data) => {
+        await api.availability.create(data)
+        loadSchedules()
+    }
+
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this schedule?')) return
+        try {
+            await api.availability.delete(id)
+            loadSchedules()
+        } catch (error) {
+            console.error(error)
+            alert('Failed to delete')
+        }
+    }
 
     return (
-        <div>
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 mb-8">
-                <h1 className="text-3xl font-bold">Availability</h1>
-                <p className="text-gray-600 mt-2">Configure your weekly schedule</p>
+        <div className="max-w-5xl mx-auto h-full flex flex-col">
+            <AvailabilityModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onCreate={handleCreate}
+            />
+
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pt-6 px-6">
+                <div>
+                    <h1 className="text-xl font-semibold text-white">Availability</h1>
+                    <p className="text-gray-400 text-sm mt-1">Configure times when you are available for bookings.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="bg-white text-black text-sm font-medium px-4 py-1.5 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2"
+                    >
+                        <Plus size={16} />
+                        New
+                    </button>
+                </div>
             </div>
 
-            <div className="px-8 pb-8">
-                <select
-                    value={selectedId}
-                    onChange={(e) => setSelectedId(e.target.value)}
-                    className="form-select w-64 mb-8"
-                >
-                    {eventTypes.map(et => (
-                        <option key={et.id} value={et.id}>{et.title}</option>
-                    ))}
-                </select>
-
-                <div className="card p-8">
-                    <h2 className="text-xl font-semibold mb-6">Weekly Schedule</h2>
-                    <div className="space-y-4">
-                        {DAYS.map((day, idx) => {
-                            const av = availability.find(a => a.dayOfWeek === idx)
-                            return (
-                                <div key={idx} className="flex items-center gap-4">
-                                    <span className="w-20 font-medium">{day}</span>
-                                    <input
-                                        type="time"
-                                        defaultValue={av?.startTime || '09:00'}
-                                        onChange={(e) => {
-                                            const endEl = document.getElementById(`end-${idx}`)
-                                            handleSave(idx, e.target.value, endEl.value)
-                                        }}
-                                        className="form-input w-32"
-                                    />
-                                    <span>to</span>
-                                    <input
-                                        id={`end-${idx}`}
-                                        type="time"
-                                        defaultValue={av?.endTime || '17:00'}
-                                        onChange={(e) => {
-                                            const startEl = document.getElementById(`start-${idx}`)
-                                            if (!startEl) return
-                                            handleSave(idx, startEl.value, e.target.value)
-                                        }}
-                                        className="form-input w-32"
-                                    />
-                                </div>
-                            )
-                        })}
+            {/* Content Area */}
+            <div className="flex-1 px-6 pb-12">
+                {loading ? (
+                    <div className="text-gray-400 text-sm">Loading...</div>
+                ) : schedules.length === 0 ? (
+                    <div className="border border-[#2C2C2C] border-dashed rounded-lg bg-[#101010] h-[400px] flex flex-col items-center justify-center text-center">
+                        <div className="w-16 h-16 rounded-full bg-[#1C1C1C] flex items-center justify-center mb-4">
+                            <Clock size={32} className="text-gray-400" strokeWidth={1.5} />
+                        </div>
+                        <h3 className="text-white font-semibold text-lg mb-2">Create an availability schedule</h3>
+                        <p className="text-gray-400 text-sm max-w-sm mb-6">
+                            Creating availability schedules allows you to manage availability across event types.
+                        </p>
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="bg-white text-black text-sm font-medium px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2"
+                        >
+                            <Plus size={16} />
+                            New
+                        </button>
                     </div>
-                </div>
+                ) : (
+                    <div className="border border-[#2C2C2C] rounded-lg divide-y divide-[#2C2C2C] bg-[#101010] overflow-hidden">
+                        {schedules.map(schedule => (
+                            <div key={schedule.id} className="group flex items-center justify-between p-4 hover:bg-[#1C1C1C]/50 transition-colors">
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="text-sm font-semibold text-white">{schedule.name}</h3>
+                                        {schedule.isDefault && (
+                                            <span className="text-[10px] font-medium bg-green-900/40 text-green-400 px-1.5 py-0.5 rounded border border-green-900">
+                                                Default
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                                        <div className="flex items-center gap-1.5">
+                                            <Globe size={12} />
+                                            Asia/Kolkata
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleDelete(schedule.id)}
+                                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-[#2C2C2C] rounded-md transition-colors"
+                                        title="Delete Schedule"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                    <button className="p-2 text-gray-400 hover:text-white hover:bg-[#2C2C2C] rounded-md transition-colors">
+                                        <MoreHorizontal size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     )

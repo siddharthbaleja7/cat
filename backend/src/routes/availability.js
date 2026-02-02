@@ -7,59 +7,95 @@ const prisma = new PrismaClient()
 
 router.use(auth)
 
-// Create/Update availability
+// --- Schedules ---
+
+// Get all schedules
+router.get('/', async (req, res) => {
+    try {
+        const schedules = await prisma.schedule.findMany({
+            where: { userId: req.userId },
+            include: { availability: true },
+            orderBy: { isDefault: 'desc' }
+        })
+        res.json({ data: schedules })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+})
+
+// Create schedule
 router.post('/', async (req, res) => {
     try {
-        const { eventTypeId, dayOfWeek, startTime, endTime, timezone } = req.body
-
-        const availability = await prisma.availability.upsert({
-            where: {
-                eventTypeId_dayOfWeek: {
-                    eventTypeId,
-                    dayOfWeek: parseInt(dayOfWeek)
+        const { name } = req.body
+        const schedule = await prisma.schedule.create({
+            data: {
+                userId: req.userId,
+                name,
+                isDefault: false, // First one could be default logic
+                availability: {
+                    createMany: {
+                        data: [
+                            // Default 9-5 Mon-Fri
+                            { dayOfWeek: 1, startTime: '09:00', endTime: '17:00' },
+                            { dayOfWeek: 2, startTime: '09:00', endTime: '17:00' },
+                            { dayOfWeek: 3, startTime: '09:00', endTime: '17:00' },
+                            { dayOfWeek: 4, startTime: '09:00', endTime: '17:00' },
+                            { dayOfWeek: 5, startTime: '09:00', endTime: '17:00' },
+                        ]
+                    }
                 }
             },
-            create: {
-                eventTypeId,
-                dayOfWeek: parseInt(dayOfWeek),
-                startTime,
-                endTime,
-                timezone: timezone || 'UTC'
-            },
-            update: {
-                startTime,
-                endTime,
-                timezone: timezone || 'UTC'
+            include: { availability: true }
+        })
+        res.status(201).json({ success: true, data: schedule })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+})
+
+// Update availability for a schedule or event type
+// This endpoint needs to be flexible.
+// POST /slots -> { scheduleId, slots: [] }
+router.post('/slots', async (req, res) => {
+    try {
+        const { scheduleId, eventTypeId, slots } = req.body
+
+        // Clear existing
+        await prisma.availability.deleteMany({
+            where: {
+                OR: [
+                    { scheduleId: scheduleId },
+                    { eventTypeId: eventTypeId }
+                ]
             }
         })
 
-        res.status(201).json({ success: true, data: availability })
+        // Create new
+        if (slots && slots.length > 0) {
+            await prisma.availability.createMany({
+                data: slots.map(s => ({
+                    scheduleId,
+                    eventTypeId,
+                    dayOfWeek: s.dayOfWeek,
+                    startTime: s.startTime,
+                    endTime: s.endTime,
+                    timezone: s.timezone || 'UTC'
+                }))
+            })
+        }
+
+        res.json({ success: true })
     } catch (error) {
         res.status(500).json({ error: error.message })
     }
 })
 
-// Get availability for event type
-router.get('/:eventTypeId', async (req, res) => {
-    try {
-        const availability = await prisma.availability.findMany({
-            where: { eventTypeId: req.params.eventTypeId },
-            orderBy: { dayOfWeek: 'asc' }
-        })
-
-        res.json({ data: availability })
-    } catch (error) {
-        res.status(500).json({ error: error.message })
-    }
-})
-
-// Delete availability
+// Delete schedule
 router.delete('/:id', async (req, res) => {
     try {
-        await prisma.availability.delete({
+        await prisma.schedule.delete({
             where: { id: req.params.id }
         })
-
         res.json({ success: true })
     } catch (error) {
         res.status(500).json({ error: error.message })

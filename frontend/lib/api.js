@@ -56,7 +56,18 @@ export const api = {
             body: JSON.stringify(data)
         }).then(r => r.json()),
 
-        get: (eventTypeId) => fetch(`${API_URL}/availability/${eventTypeId}`, {
+        getAll: () => fetch(`${API_URL}/availability`, {
+            headers: getHeaders()
+        }).then(r => r.json()),
+
+        update: (id, data) => fetch(`${API_URL}/availability/${id}`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        }).then(r => r.json()),
+
+        delete: (id) => fetch(`${API_URL}/availability/${id}`, {
+            method: 'DELETE',
             headers: getHeaders()
         }).then(r => r.json()),
     },
